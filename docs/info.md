@@ -7,14 +7,6 @@ You can also include images in this folder and reference them in the markdown. E
 512 kb in size, and the combined size of all images must be less than 1 MB.
 -->
 
-## How it works
+## What it is
 
-Explain how your project works
-
-## How to test
-
-Explain how to use your project
-
-## External hardware
-
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+This is an OpenLane 2 version of `tt_um_toivoh_basilisc_2816` / https://github.com/toivoh/tt07-basilisc-2816-cpu. It omits the `mul` instruction but increases the length of the prefetch queue to 3 words. For more details, see the documentation of that project / https://github.com/toivoh/tt07-basilisc-2816-cpu/blob/main/docs/info.md.
