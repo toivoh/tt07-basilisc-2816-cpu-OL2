@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module tt_um_toivoh_basilisc_2816 #( parameter IO_BITS=2 )(
+module tt_um_toivoh_basilisc_2816_cpu_OL2 #( parameter IO_BITS=2 )(
 		input  wire [7:0] ui_in,    // Dedicated inputs
 		output wire [7:0] uo_out,   // Dedicated outputs
 		input  wire [7:0] uio_in,   // IOs: Input path

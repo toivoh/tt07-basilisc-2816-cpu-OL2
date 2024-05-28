@@ -22,7 +22,7 @@ module tb ();
 	wire [7:0] uio_out;
 	wire [7:0] uio_oe;
 
-	tt_um_toivoh_basilisc_2816 top (
+	tt_um_toivoh_basilisc_2816_cpu_OL2 top (
 
 		// Include power ports for the Gate Level test:
 `ifdef GL_TEST
