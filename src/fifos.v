@@ -107,3 +107,50 @@ module SRFIFO #( parameter DEPTH=3, BITS=1 ) (
 	assign last_valid = valid[DEPTH-1];
 	assign last_entry = sr_entries[DEPTH-1];
 endmodule : SRFIFO
+
+
+/*
+Like SRFIFO, but using latches.
+new_entry must be stable between the cycle after add is raised and the next cycle.
+*/
+module SRFIFO_latched #( parameter DEPTH=3, BITS=1 ) (
+		input wire clk, reset,
+
+		input wire add, remove, // only add when can_add is high, only remove when last_valid is
+		input wire [BITS-1:0] new_entry, // new_entry must be stable between the cycle after add is raised and the next cycle.
+		output wire new_entry_sampled, // when high, new_entry can be changed next cycle
+		output wire [BITS-1:0] last_entry,
+		output wire can_add, last_valid
+	);
+
+	genvar i;
+
+	wire [BITS-1:0] data[DEPTH+1];
+	assign data[0] = new_entry;
+	assign last_entry = data[DEPTH];
+
+	wire [DEPTH:0] valid; // 1 .. DEPTH are for the latch registers
+	assign valid[0] = add;
+	assign can_add = !valid[1];
+	assign last_valid = valid[DEPTH];
+
+	wire [DEPTH:0] sampling_in; // 0 .. DEPTH - 1 are the latch registers
+	assign sampling_in[DEPTH] = remove;
+
+	// Transfer if the current position is valid and the next one is free
+	wire [DEPTH-1:0] we = valid[DEPTH-1:0] & ~valid[DEPTH:1];
+	// Invalidate when the next register reads ==> can update one cycle after the read.
+	wire [DEPTH-1:0] invalidate = sampling_in[DEPTH:1];
+	assign new_entry_sampled = sampling_in[0];
+
+	generate
+		for (i = 0; i < DEPTH; i++) begin
+			latch_register #(.BITS(BITS)) register(
+				.clk(clk), .reset(reset),
+				.in(data[i]), .out(data[i+1]),
+				.we(we[i]), .sampling_in(sampling_in[i]),
+				.invalidate(invalidate[i]), .out_valid(valid[i+1])
+			);
+		end
+	endgenerate
+endmodule : SRFIFO_latched

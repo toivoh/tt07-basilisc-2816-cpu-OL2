@@ -14,6 +14,7 @@ echo "=========="
 grep "Number of" runs/wokwi/06-yosys-synthesis/yosys-synthesis.log | tail -n 8
 #grep "dfxtp_.  " runs/wokwi/06-yosys-synthesis/yosys-synthesis.log
 ./tt/tt_tool.py --openlane2 --print-cell-summary | grep dfxtp
+./tt/tt_tool.py --openlane2 --print-cell-summary | grep dlxtp
 ./tt/tt_tool.py --openlane2 --print-cell-summary | grep Total
 grep "Chip area" runs/wokwi/06-yosys-synthesis/yosys-synthesis.log
 echo

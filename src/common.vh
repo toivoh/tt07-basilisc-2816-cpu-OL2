@@ -1,5 +1,6 @@
 
 //`define USE_MULTIPLIER
+`define USE_LATCH_REGISTERS
 
 `define OP_BITS 3
 `define OP_BIT_NADD 2

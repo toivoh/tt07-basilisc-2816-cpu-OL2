@@ -75,6 +75,16 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 	wire can_add, last_valid;
 	//wire [NE_BITS-1:0] num_entries;
 
+`ifdef USE_LATCH_REGISTERS
+	// new_entry must be stable between the cycle after add is raised and the next cycle.
+	// This should be satisified by new_entry = sreg, there are at least two cycles of header bits before receiving new data.
+	SRFIFO_latched #( .DEPTH(PREFETCH_DEPTH), .BITS(INST_BITS) ) fifo (
+		.clk(clk), .reset(reset),
+		.add(add), .remove(remove), .new_entry(new_entry),
+		.last_entry(last_entry),
+		.can_add(can_add), .last_valid(last_valid)
+	);
+`else
 	SRFIFO #( .DEPTH(PREFETCH_DEPTH), .BITS(INST_BITS) ) fifo (
 		.clk(clk), .reset(reset),
 		.add(add), .remove(remove), .new_entry(new_entry),
@@ -82,6 +92,7 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 		.can_add(can_add), .last_valid(last_valid)
 		//.num_entries(num_entries),
 	);
+`endif
 
 	reg [INST_BITS-1:0] sreg;
 	reg sreg_full;

@@ -19,6 +19,7 @@ project:
     - "alu.v"
     - "scheduler.v"
     - "decoder.v"
+    - "latch_register.v"
     - "fifos.v"
     - "sb_io.v"
     - "mem_interface.v"
