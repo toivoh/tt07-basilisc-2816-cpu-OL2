@@ -308,7 +308,7 @@ async def test_cpu(dut):
 			last_addr = (last_addr + 2) & 0xffff
 			assert addr == last_addr
 			num_flushed += 1
-			assert num_flushed < 4 # Depends on prefetch queue size
+			assert num_flushed < pq_size # Depends on prefetch queue size
 			return (RX_SB_READ_16, 0)
 
 		num_flushed = 0
@@ -324,6 +324,8 @@ async def test_cpu(dut):
 	state.ram_emu = ram_emu
 
 	min_jump = 1
+	test_jumps = True
+	pq_size = 5
 
 	#for i in range(8):
 	#	exec(Binop(BinopNum.MOV, ArgReg(False, i), ArgImm8(False, state.get_reg(i))))
@@ -334,14 +336,15 @@ async def test_cpu(dut):
 	exec(Binop(BinopNum.MOV, ArgRegSP(False), ArgReg(False, 0)))
 
 	# Test every short call instruction
-	for offset in range(-128, 128):
-		if offset == 0: continue
-		exec(Branch(offset, cc=CCNum.CALL.value))
-		for i in range(0, 2):
-			exec(Binop(BinopNum.MOV, ArgMemR16PlusImm2(True, 4*i, 0), ArgReg(True, 4*i+2)))
+	if test_jumps:
+		for offset in range(-128, 128):
+			if offset == 0: continue
+			exec(Branch(offset, cc=CCNum.CALL.value))
+			for i in range(0, 2):
+				exec(Binop(BinopNum.MOV, ArgMemR16PlusImm2(True, 4*i, 0), ArgReg(True, 4*i+2)))
 
 	# Test ret
-	exec(Jump(ArgMemPushPopTop(True)))
+	if test_jumps: exec(Jump(ArgMemPushPopTop(True)))
 
 	# Try all even shl shift steps
 	for wide in [False, True]:
@@ -404,20 +407,21 @@ async def test_cpu(dut):
 
 
 	# Test different kinds of indirect jumps
-	for call in (False, True):
-		exec(Jump(rand_arg_mem_r16r8(True), call=call))
-		exec(Jump(rand_arg_mem_r16incdec(True), call=call))
-		exec(Jump(rand_arg_mem_r16imm2(True), call=call))
-		exec(Jump(rand_arg_mem_zp(True), call=False)) # Doesn't support call
-		exec(Jump(rand_arg_reg(True), call=call))
-		exec(Jump(rand_arg_sext_reg(True), call=call))
-		#exec(Jump(rand_arg_zext_reg(True))) # not supported
+	if test_jumps:
+		for call in (False, True):
+			exec(Jump(rand_arg_mem_r16r8(True), call=call))
+			exec(Jump(rand_arg_mem_r16incdec(True), call=call))
+			exec(Jump(rand_arg_mem_r16imm2(True), call=call))
+			exec(Jump(rand_arg_mem_zp(True), call=False)) # Doesn't support call
+			exec(Jump(rand_arg_reg(True), call=call))
+			exec(Jump(rand_arg_sext_reg(True), call=call))
+			#exec(Jump(rand_arg_zext_reg(True))) # not supported
 
 
 	for iter in range(n_tests):
 		rnd = randrange(13)
 		wide = randbool() # used by most cases below
-		if rnd == 0:
+		if test_jumps and rnd == 0:
 			if randbool():
 				# Avoid jumping with offset = 0
 				offset = randrange(-128, 128 - min_jump)
