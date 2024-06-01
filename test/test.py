@@ -4,6 +4,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
+import random, sys
 from random import randrange, getrandbits, choice
 
 from ram_emulator import *
@@ -236,6 +237,12 @@ async def test_cpu(dut):
 	dut._log.info("start")
 	clock = Clock(dut.clk, 2, units="us")
 	cocotb.start_soon(clock.start())
+
+	seed = randrange(sys.maxsize)
+	random.seed(seed)
+	print("="*120)
+	print("Random seed:", seed)
+	print("="*120)
 
 	preserved = True
 	try:
@@ -483,6 +490,9 @@ async def test_cpu(dut):
 
 
 	#print("pcs = ", pcs)
+	print("="*120)
+	print("Random seed:", seed)
+	print("="*120)
 
 	for i in range(300*n_tests):
 		#tx, tx_fetch = dut.tx_pins.value.integer, dut.tx_fetch.value.integer
@@ -505,3 +515,7 @@ async def test_cpu(dut):
 
 	print("pos =", pos)
 	assert pos == len(instructions) # Check that we had time to fetch all instructions
+
+	print("="*120)
+	print("Random seed:", seed)
+	print("="*120)

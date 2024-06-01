@@ -4,6 +4,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
+import random, sys
 from random import randrange, getrandbits, choice
 
 from ram_emulator import RAMEmulator
@@ -15,6 +16,12 @@ async def test_decoder(dut):
 	dut._log.info("start")
 	clock = Clock(dut.clk, 2, units="us")
 	cocotb.start_soon(clock.start())
+
+	seed = randrange(sys.maxsize)
+	random.seed(seed)
+	print("="*120)
+	print("Random seed:", seed)
+	print("="*120)
 
 	preserved = True
 	decoder = dut.dec
@@ -149,3 +156,7 @@ async def test_decoder(dut):
 
 	else:
 		await ClockCycles(dut.clk, 1)
+
+	print("="*120)
+	print("Random seed:", seed)
+	print("="*120)
