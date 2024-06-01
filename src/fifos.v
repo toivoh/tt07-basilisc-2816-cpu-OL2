@@ -37,8 +37,10 @@ module FIFO #( parameter DEPTH=3, BITS=1 ) (
 
 	generate
 		for (i=2; i <= DEPTH; i++) begin
+			reg [BITS-1:0] entry_delayed;
+			delay_buffer #(.BITS(BITS), .ENABLE_MASK(`DELAY_BUFFER_FIFO_MASK)) delay_entry(.in(entries[i-1]), .out(entry_delayed));
 			always @(posedge clk) begin
-				if (add) entries[i] <= entries[i-1];
+				if (add) entries[i] <= entry_delayed;
 			end
 		end
 	endgenerate

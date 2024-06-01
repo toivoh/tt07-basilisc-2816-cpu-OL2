@@ -94,7 +94,10 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 	);
 `endif
 
-	reg [INST_BITS-1:0] sreg;
+	reg  [INST_BITS-1:0] sreg;
+	wire [INST_BITS-1:0] sreg_delayed;
+	delay_buffer #(.BITS(INST_BITS), .ENABLE_MASK(`DELAY_BUFFER_MASK_2BIT)) delay_sreg(.in(sreg), .out(sreg_delayed));
+
 	reg sreg_full;
 	always @(posedge clk) begin
 		if (reset) begin
@@ -104,7 +107,7 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 			else if (can_add) sreg_full <= 0;
 		end
 
-		if (rx_data_valid) sreg <= {rx_pins, sreg[INST_BITS-1:IO_BITS]};
+		if (rx_data_valid) sreg <= {rx_pins, sreg_delayed[INST_BITS-1:IO_BITS]};
 	end
 
 	assign new_entry = sreg;
@@ -112,6 +115,7 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 
 	reg [INST_BITS-1:0] inst_reg; // not used if `ifdef USE_LATCH_INSTREG
 	reg inst_reg_valid; // not used if `ifdef USE_LATCH_INSTREG
+
 	//reg [IMM_BITS-1:0] imm_reg;
 
 `ifdef USE_LATCH_INSTREG

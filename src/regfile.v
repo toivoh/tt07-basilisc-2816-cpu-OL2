@@ -39,8 +39,12 @@ module regfile #( parameter LOG2_NR=3, REG_BITS=8, NSHIFT=2 ) (
 			wire [NSHIFT-1:0] reg_scan_in = active_reg ? scan_in : scan_in2;
 			wire reg_scan = active_reg | active_reg2;
 
+			wire [REG_BITS-1:0] reg_delayed;
+			delay_buffer #(.BITS(REG_BITS), .ENABLE_MASK(`DELAY_BUFFER_REGFILE_MASK_2BIT)) delay_reg(.in(regs[i]), .out(reg_delayed));
+
 			always @(posedge clk) begin
-				if (reg_scan) regs[i] <= {reg_scan_in, regs[i][REG_BITS-1:NSHIFT]};
+				//if (reg_scan) regs[i] <= {reg_scan_in, regs[i][REG_BITS-1:NSHIFT]};
+				if (reg_scan) regs[i] <= {reg_scan_in, reg_delayed[REG_BITS-1:NSHIFT]};
 			end
 		end
 	endgenerate
