@@ -58,6 +58,12 @@ module latch_register #( parameter BITS=16 ) (
 	end
 `else
 	wire gate = we_reg;
+`ifdef SIM
+	// Infer latches
+	reg [BITS-1:0] out_latch;
+	always @(*) if (gate) out_latch <= in;
+	assign out = out_latch;
+`else
 	generate
 		for (i = 0; i < BITS; i++) begin
 			(* keep = "true" *) sky130_fd_sc_hd__dlxtp_1 latch(
@@ -65,6 +71,7 @@ module latch_register #( parameter BITS=16 ) (
 			);
 		end
 	endgenerate
+`endif
 `endif
 
 	assign sampling_in = we_reg;

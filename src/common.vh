@@ -1,10 +1,16 @@
 
 `define USE_MULTIPLIER
+
+`ifndef SIM
 //`define USE_DELAY_BUFFERS
+`endif
+
 `define USE_LATCH_REGISTERS
 `define USE_LATCH_INSTREG // assumes USE_LATCH_REGISTERS
 
+`ifdef SIM
 //`define TEST_LATE_OPEN_LATCHES // just for testing, not for synthesis!
+`endif
 
 `define DELAY_BUFFER_MASK_2BIT 'b1100110011001100
 //`define DELAY_BUFFER_REGFILE_MASK_2BIT 'b00110011
