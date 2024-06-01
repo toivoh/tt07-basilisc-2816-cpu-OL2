@@ -68,11 +68,11 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 	// Prefetch queue
 	// ==============
 
-	wire add, remove;
+	wire add, remove, fifo_remove;
 	wire [INST_BITS-1:0] new_entry;
 
 	wire [INST_BITS-1:0] last_entry;
-	wire can_add, last_valid;
+	wire can_add, last_valid, fifo_last_valid;
 	//wire [NE_BITS-1:0] num_entries;
 
 `ifdef USE_LATCH_REGISTERS
@@ -80,16 +80,16 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 	// This should be satisified by new_entry = sreg, there are at least two cycles of header bits before receiving new data.
 	SRFIFO_latched #( .DEPTH(PREFETCH_DEPTH), .BITS(INST_BITS) ) fifo (
 		.clk(clk), .reset(reset),
-		.add(add), .remove(remove), .new_entry(new_entry),
+		.add(add), .remove(fifo_remove), .new_entry(new_entry),
 		.last_entry(last_entry),
-		.can_add(can_add), .last_valid(last_valid)
+		.can_add(can_add), .last_valid(fifo_last_valid)
 	);
 `else
 	SRFIFO #( .DEPTH(PREFETCH_DEPTH), .BITS(INST_BITS) ) fifo (
 		.clk(clk), .reset(reset),
-		.add(add), .remove(remove), .new_entry(new_entry),
+		.add(add), .remove(fifo_remove), .new_entry(new_entry),
 		.last_entry(last_entry),
-		.can_add(can_add), .last_valid(last_valid)
+		.can_add(can_add), .last_valid(fifo_last_valid)
 		//.num_entries(num_entries),
 	);
 `endif
@@ -110,12 +110,43 @@ module prefetcher #( parameter IO_BITS=2, PAYLOAD_CYCLES=8, PREFETCH_DEPTH=1, IM
 	assign new_entry = sreg;
 	assign add = sreg_full && can_add;
 
-	reg [INST_BITS-1:0] inst_reg;
+	reg [INST_BITS-1:0] inst_reg; // not used if `ifdef USE_LATCH_INSTREG
+	reg inst_reg_valid; // not used if `ifdef USE_LATCH_INSTREG
 	//reg [IMM_BITS-1:0] imm_reg;
-	reg inst_reg_valid;
 
+`ifdef USE_LATCH_INSTREG
+	wire [INST_BITS-1:0] inst_latch_value;
+	wire sampling_last_entry, inst_latch_valid;
+	latch_register #(.BITS(INST_BITS)) inst_register(
+		.clk(clk), .reset(reset),
+		.in(last_entry), .out(inst_latch_value),
+		.we(load_inst_reg), .sampling_in(sampling_last_entry),
+		.invalidate(inst_done), .out_valid(inst_latch_valid)
+	);
+	assign inst_valid = inst_latch_valid;
+	assign inst = inst_latch_value;
+
+	// We have to keep last_entry valid for one more cycle to ensure it loads correctly into the instruction latch.
+	// Pretend that it was already invalidated to make the rest of the code work correctly,
+	// but raise fifo_remove one cycle later.
+	reg last_remove;
+	always @(posedge clk) begin
+		if (reset) last_remove <= 0;
+		else last_remove <= remove;
+	end
+	assign last_valid = fifo_last_valid && !last_remove;
+
+	// There are other reasons to remove last_entry than that it was sampled: discard, imm16.
+	// Just delay the removal by one cycle.
+	//assign fifo_remove = sampling_last_entry;
+	assign fifo_remove = last_remove;
+`else
 	assign inst_valid = inst_reg_valid;
 	assign inst = inst_reg;
+	assign last_valid = fifo_last_valid;
+	assign fifo_remove = remove;
+`endif
+
 	assign imm_data_out = imm_reg[IO_BITS-1:0];
 
 	// An instruction word leaves the prefetch stage when it enters the instruction register or is flushed, which happens when remove is high.
