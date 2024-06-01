@@ -5,6 +5,8 @@
 
 `default_nettype none
 
+`include "common.vh"
+
 /*
 Latch based register
 */
@@ -39,13 +41,31 @@ module latch_register #( parameter BITS=16 ) (
 		end
 	end
 
+`ifdef TEST_LATE_OPEN_LATCHES
+	// Assume that the gate stays open an additional cycle
+	reg late_we_reg;
+	wire gate = we_reg || late_we_reg;
+
+	// Model the latch with a flipflop and a mux
+	reg [BITS-1:0] value;
+	assign out = gate ? in : value;
+
+	always @(posedge clk) begin
+		if (reset) late_we_reg <= 0;
+		else late_we_reg <= we_reg;
+
+		if (gate) value <= in;
+	end
+`else
+	wire gate = we_reg;
 	generate
 		for (i = 0; i < BITS; i++) begin
 			(* keep = "true" *) sky130_fd_sc_hd__dlxtp_1 latch(
-				.D(in[i]), .GATE(we_reg), .Q(out[i])
+				.D(in[i]), .GATE(gate), .Q(out[i])
 			);
 		end
 	endgenerate
+`endif
 
 	assign sampling_in = we_reg;
 //	assign in_sampled = in_sampled_reg;

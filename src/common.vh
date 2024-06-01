@@ -1,6 +1,7 @@
 
 //`define USE_MULTIPLIER
 `define USE_LATCH_REGISTERS
+//`define TEST_LATE_OPEN_LATCHES // just for testing, not for synthesis!
 
 `define OP_BITS 3
 `define OP_BIT_NADD 2

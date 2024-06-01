@@ -58,6 +58,11 @@ module tb ();
 	wire [REG_BITS-1:0] r6 = top.cpu.dec.sched.alu.registers.general_registers.regs[6];
 	wire [REG_BITS-1:0] r7 = top.cpu.dec.sched.alu.registers.general_registers.regs[7];
 	wire [REG_BITS-1:0] sp = top.cpu.dec.sched.alu.registers.sp_register.regs;
+
+	localparam INST_BITS = 16;
+	wire [INST_BITS-1:0] data0 = top.cpu.pref.fifo.data[0];
+	wire [INST_BITS-1:0] data1 = top.cpu.pref.fifo.data[1];
+	wire [INST_BITS-1:0] data2 = top.cpu.pref.fifo.data[2];
 `endif
 
 `ifdef USE_MULTIPLIER
